@@ -3,6 +3,7 @@ from flask_cors import CORS
 import json
 import difflib
 from datetime import datetime
+import requests
 
 app = Flask(__name__)
 CORS(app)
@@ -31,20 +32,30 @@ def get_answer(user_question):
         "Here are some things you can ask:\n" + suggestions
     )
 
+GOOGLE_SHEET_WEBHOOK = https://script.google.com/macros/s/AKfycbwQtCehOyyyoMb8HX8vIp5P7HjyZo9n7Ma7xKiIu_fe2IZlzmRcigi4Nilbr2nTt--BDQ/exec"
+
 @app.route('/get_answer', methods=['POST'])
 def get_bot_answer():
     data = request.get_json()
     user_question = data.get('question', '')
-    name = data.get('name', 'Anonymous')
-    email = data.get('email', 'Not Provided')
-    phone = data.get('phone', 'Not Provided')
+    name = data.get('name', 'Unknown')
+    contact = data.get('phone', 'Unknown')
+    email = data.get('email', 'Unknown')
+
 
     answer = get_answer(user_question)
 
     # Log the user info and question to a file
-    with open("chat_logs.txt", "a", encoding='utf-8') as log_file:
-        log_entry = f"{datetime.now()} | Name: {name} | Email: {email} | Phone: {phone} | Question: {user_question} | Answer: {answer}\n"
-        log_file.write(log_entry)
+    try:
+        requests.post(GOOGLE_SHEET_WEBHOOK, json={
+            'name': name,
+            'contact': contact,
+            'email': email,
+            'question': question,
+            'answer': answer
+        })
+    except Exception as e:
+        print("Logging to Google Sheets failed:", e)
 
     return jsonify({'answer': answer})
 

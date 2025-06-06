@@ -35,7 +35,7 @@ def get_answer(user_question):
 GOOGLE_SHEET_WEBHOOK = "https://script.google.com/macros/s/AKfycbwQtCehOyyyoMb8HX8vIp5P7HjyZo9n7Ma7xKiIu_fe2IZlzmRcigi4Nilbr2nTt--BDQ/exec"
 
 @app.route('/get_answer', methods=['POST'])
-def get_answer():
+def get_bot_answer():
     data = request.get_json()
     user_question = data.get('question')
     name = data.get('name', 'Unknown')

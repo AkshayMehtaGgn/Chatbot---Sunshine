@@ -3,7 +3,7 @@ from flask_cors import CORS
 import json
 import difflib
 from datetime import datetime
-
+import requests
 
 app = Flask(__name__)
 CORS(app)

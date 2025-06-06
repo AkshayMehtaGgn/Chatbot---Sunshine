@@ -32,7 +32,7 @@ def get_answer(user_question):
         "Here are some things you can ask:\n" + suggestions
     )
 
-GOOGLE_SHEET_WEBHOOK = https://script.google.com/macros/s/AKfycbwQtCehOyyyoMb8HX8vIp5P7HjyZo9n7Ma7xKiIu_fe2IZlzmRcigi4Nilbr2nTt--BDQ/exec"
+GOOGLE_SHEET_WEBHOOK = "https://script.google.com/macros/s/AKfycbwQtCehOyyyoMb8HX8vIp5P7HjyZo9n7Ma7xKiIu_fe2IZlzmRcigi4Nilbr2nTt--BDQ/exec"
 
 @app.route('/get_answer', methods=['POST'])
 def get_bot_answer():

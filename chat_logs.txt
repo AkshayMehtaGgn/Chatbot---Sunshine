@@ -1,0 +1,8 @@
+2025-05-16 23:51:16.130843 | Name: XYZ | Email: xyz@gmail.com | Phone: 8790876545 | Question: what facilities are provided for the speical kids | Answer: 🤖 I'm not sure how to answer that. Could you try rephrasing?
+Here are some things you can ask:
+- What types of therapies do you offer for children with special needs?
+- How do I know which therapy is right for my child?
+- Do you provide assessments or diagnostic services?
+2025-05-16 23:51:53.600498 | Name: XYZ | Email: xyz@gmail.com | Phone: 8790876545 | Question: what facilities are provided for the special kids | Answer: We provide Occupational Therapy, Speech Therapy, Special Education, Behavioral Therapy, and Sensory Integration tailored to each child's unique needs.
+2025-06-06 23:21:35.502342 | Name: AAAA | Email: aaaa@aaaa.com | Phone: 1234569870 | Question: How experienced are your therapists with conditions like autism, ADHD, or developmental delays? | Answer: Our therapists are highly qualified and experienced in working with children with autism, ADHD, learning difficulties, and other neurodevelopmental conditions.
+2025-06-06 23:24:05.681877 | Name:  | Email:  | Phone:  | Question: How do I know which therapy is right for my child? | Answer: Our expert team conducts an initial assessment to understand your child's strengths and challenges, then creates a personalized therapy plan in consultation with you.

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FAQ Chatbot</title>
+</head>
+<label>Name: <input type="text" id="user-name" /></label><br>
+<label>Email: <input type="email" id="user-email" /></label><br>
+<label>Phone: <input type="text" id="user-phone" /></label><br>
+
+<body>
+  <div id="chatbox"></div>
+  <input type="text" id="user-input" placeholder="Ask a question..." />
+  <button onclick="sendMessage()">Ask</button>
+
+  <script>
+    const input = document.getElementById("user-input");
+    const chatbox = document.getElementById("chatbox");
+
+    function sendMessage() {
+      const question = document.getElementById("user-input").value;
+      const name = document.getElementById("user-name").value;
+      const email = document.getElementById("user-email").value;
+      const phone = document.getElementById("user-phone").value;
+
+      if (!question.trim()) return;
+
+      chatbox.innerHTML += `<div><strong>You:</strong> ${question}</div>`;
+
+      console.log("User Question:", question); // ✅ DEBUG LOG
+
+      fetch("http://127.0.0.1:5000/get_answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name, email: email, phone: phone, question: question })
+      })
+      .then(response => response.json())
+      .then(data => {
+        chatbox.innerHTML += `<div><strong>SunShine Bot:</strong> ${data.answer}</div>`;
+        document.getElementById("user-input").value = "";
+      })
+      .catch(error => {
+        chatbox.innerHTML += `<div><strong>SunShine Bot:</strong> Error reaching server.</div>`;
+        console.error("Error:", error);
+      });
+    }
+
+    // Submit on Enter key
+    input.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>

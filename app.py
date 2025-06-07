@@ -47,13 +47,14 @@ def get_bot_answer():
 
     # Log the user info and question to a file
     try:
-         response = requests.post(GOOGLE_SHEET_WEBHOOK, json={
+        payload = {
             'name': name,
             'contact': contact,
             'email': email,
-            'question': question,
+            'question': user_question,  # ✅ corrected variable
             'answer': answer
-        })
+        }
+        response = requests.post(GOOGLE_SHEET_WEBHOOK, json = payload)
         print("🟢 Posted to Google Sheet:", response.status_code)
         print("📄 Response:", response.text)
     except Exception as e:

@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import difflib
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import requests
 
 app = Flask(__name__)
@@ -71,7 +71,8 @@ def get_bot_answer():
 
     answer = get_answer(user_question)
     ip_address, location = get_user_ip_and_location(request)
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    IST = timezone(timedelta(hours=5, minutes=30))
+    timestamp = datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
 
     payload = {
         'timestamp': timestamp,

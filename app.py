@@ -42,17 +42,37 @@ def get_bot_answer():
     contact = data.get('contact', 'Unknown')
     email = data.get('email', 'Unknown')
 
+def get_client_ip(req):
+    if req.headers.get('X-Forwarded-For'):
+        return req.headers.get('X-Forwarded-For').split(',')[0]
+    return req.remote_addr or '0.0.0.0'
+
+def get_location_from_ip(ip):
+    try:
+        response = requests.get(f"https://ipapi.co/{ip}/json/")
+        data = response.json()
+        return f"{data.get('city')}, {data.get('region')}, {data.get('country_name')}"
+    except Exception as e:
+        print("Location lookup failed:", e)
+        return "Unknown"
+
+
 
     answer = get_answer(user_question)
 
     # Log the user info and question to a file
     try:
+        ip_address = get_client_ip(request)
+        location = get_location_from_ip(ip_address)
+
         payload = {
             'name': name,
             'contact': contact,
             'email': email,
-            'question': user_question,  # ✅ corrected variable
-            'answer': answer
+            'question': user_question,
+            'answer': answer,
+            'ip_address': ip_address,
+            'location': location
         }
         response = requests.post(GOOGLE_SHEET_WEBHOOK, json = payload)
         print("🟢 Posted to Google Sheet:", response.status_code)

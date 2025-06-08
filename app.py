@@ -1,74 +1,90 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import json, difflib, requests, logging, os
+import json
+import difflib
+from datetime import datetime
+import requests
 
 app = Flask(__name__)
 CORS(app)
-logging.basicConfig(level=logging.INFO)
 
-# Load and preprocess FAQs
+# Load FAQs from faq.json
 with open("faq.json", encoding="utf-8") as f:
     faqs = json.load(f)
 
-faq_map = {faq["question"].strip().lower(): faq["answer"] for faq in faqs}
-
-GOOGLE_SHEET_WEBHOOK = "https://script.google.com/macros/s/AKfycbw.../exec"
-
+# Fuzzy match function
 def get_answer(user_question):
     user_question = user_question.strip().lower()
-    closest = difflib.get_close_matches(user_question, faq_map.keys(), n=1, cutoff=0.5)
+    all_questions = [faq["question"].strip().lower() for faq in faqs]
+
+    closest = difflib.get_close_matches(user_question, all_questions, n=1, cutoff=0.5)
 
     if closest:
-        return faq_map[closest[0]]
+        matched_q = closest[0]
+        for faq in faqs:
+            if faq["question"].strip().lower() == matched_q:
+                return faq["answer"]
 
-    suggestions = "\n".join(f"- {q}" for q in list(faq_map.keys())[:3])
+    suggestions = "\n".join(["- " + faq["question"] for faq in faqs[:3]])
     return (
         "🤖 I'm not sure how to answer that. Could you try rephrasing?\n"
         "Here are some things you can ask:\n" + suggestions
     )
 
-def get_client_ip(req):
-    return (req.headers.get('X-Forwarded-For') or req.remote_addr or '0.0.0.0').split(',')[0]
+# Google Apps Script Webhook URL
+GOOGLE_SHEET_WEBHOOK = "https://script.google.com/macros/s/AKfycbwQtCehOyyyoMb8HX8vIp5P7HjyZo9n7Ma7xKiIu_fe2IZlzmRcigi4Nilbr2nTt--BDQ/exec"
 
-def get_location_from_ip(ip):
+# Get IP and location
+def get_user_ip_and_location(req):
+    ip_address = req.remote_addr or 'Unknown'
+    location = 'Unknown'
     try:
-        res = requests.get(f"https://ipapi.co/{ip}/json/")
-        data = res.json()
-        return f"{data.get('city', '')}, {data.get('region', '')}, {data.get('country_name', '')}"
+        geo_req = requests.get(f'https://ipapi.co/{ip_address}/json/')
+        geo_data = geo_req.json()
+        city = geo_data.get("city", "")
+        region = geo_data.get("region", "")
+        country = geo_data.get("country_name", "")
+        location = f"{city}, {region}, {country}".strip(', ')
     except Exception as e:
-        logging.warning("IP lookup failed: %s", e)
-        return "Unknown"
+        print("🌐 Failed to fetch IP/location:", e)
+    return ip_address, location
 
+# Main route
 @app.route('/get_answer', methods=['POST'])
 def get_bot_answer():
     data = request.get_json()
-    user_question = data.get('question', '')
+    user_question = data.get('question')
     name = data.get('name', 'Unknown')
     contact = data.get('contact', 'Unknown')
     email = data.get('email', 'Unknown')
 
     answer = get_answer(user_question)
-    ip_address = get_client_ip(request)
-    location = get_location_from_ip(ip_address)
+    ip_address, location = get_user_ip_and_location(request)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    # Match Google Sheet headers: Timestamp|Name|Contact|Email|Question|Answer|IP|Location
     payload = {
-        'name': name,
-        'contact': contact,
-        'email': email,
-        'question': user_question,
-        'answer': answer,
-        'ip_address': ip_address,
-        'location': location
+        'Timestamp': timestamp,
+        'Name': name,
+        'Contact': contact,
+        'Email': email,
+        'Question': user_question,
+        'Answer': answer,
+        'IP': ip_address,
+        'Location': location
     }
 
     try:
-        response = requests.post(GOOGLE_SHEET_WEBHOOK, json=payload)
-        logging.info("Posted to Google Sheet: %s", response.status_code)
+        response = requests.post(GOOGLE_SHEET_WEBHOOK, data=payload)
+        print("🟢 Posted to Google Sheet:", response.status_code)
+        print("📄 Response:", response.text)
     except Exception as e:
-        logging.error("Logging to Google Sheets failed: %s", e)
+        print("❌ Logging to Google Sheets failed:", e)
 
     return jsonify({'answer': answer})
 
+# Start the app
 if __name__ == "__main__":
+    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)

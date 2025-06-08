@@ -8,14 +8,14 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# Load FAQs once
+# Load FAQs once from local faq.json
 with open("faq.json", encoding="utf-8") as f:
     faqs = json.load(f)
 
-# Webhook for Google Apps Script
+# Google Apps Script Webhook
 GOOGLE_SHEET_WEBHOOK = "https://script.google.com/macros/s/AKfycbwQtCehOyyyoMb8HX8vIp5P7HjyZo9n7Ma7xKiIu_fe2IZlzmRcigi4Nilbr2nTt--BDQ/exec"
 
-# Get the best matching answer
+# Answer retrieval via fuzzy matching
 def get_answer(user_question):
     user_question = user_question.strip().lower()
     all_questions = [faq["question"].strip().lower() for faq in faqs]
@@ -33,7 +33,7 @@ def get_answer(user_question):
         "Here are some things you can ask:\n" + suggestions
     )
 
-# Helper to get user's IP and location
+# User IP and Location lookup
 def get_user_ip_and_location(req):
     ip_address = req.remote_addr or 'Unknown'
     location = 'Unknown'
@@ -48,7 +48,7 @@ def get_user_ip_and_location(req):
         print("🌐 Failed to fetch IP/location:", e)
     return ip_address, location
 
-# Log to Google Sheet
+# POST logs to Google Sheet
 def log_to_google_sheet(payload):
     try:
         response = requests.post(GOOGLE_SHEET_WEBHOOK, json=payload)
@@ -60,11 +60,11 @@ def log_to_google_sheet(payload):
 @app.route('/get_answer', methods=['POST'])
 def get_bot_answer():
     data = request.get_json()
-
     user_question = data.get('question', '').strip()
     name = data.get('name', 'Unknown')
     contact = data.get('contact', 'Unknown')
     email = data.get('email', 'Unknown')
+    feedback = data.get('feedback', '')  # Optional Yes/No feedback
 
     if not user_question:
         return jsonify({'answer': "❗Please ask a valid question."})
@@ -81,11 +81,16 @@ def get_bot_answer():
         'question': user_question,
         'answer': answer,
         'ip_address': ip_address,
-        'location': location
+        'location': location,
+        'feedback': feedback
     }
 
     log_to_google_sheet(payload)
     return jsonify({'answer': answer})
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'ok'}), 200
 
 if __name__ == "__main__":
     import os

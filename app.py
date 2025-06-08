@@ -75,7 +75,7 @@ def get_bot_answer():
     }
 
     try:
-        response = requests.post(GOOGLE_SHEET_WEBHOOK, data=payload)
+        response = requests.post(GOOGLE_SHEET_WEBHOOK, json=payload)
         print("🟢 Posted to Google Sheet:", response.status_code)
         print("📄 Response:", response.text)
     except Exception as e:

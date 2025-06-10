@@ -2,8 +2,9 @@ from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 import json
 import difflib
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -30,10 +31,15 @@ def get_answer(user_question):
         for faq in faqs:
             if faq["question"].strip().lower() == match:
                 return faq["answer"]
-    suggestions = "\n".join(["- " + faq["question"] for faq in faqs[:3]])
+
+    suggestions = difflib.get_close_matches(user_question, questions, n=3, cutoff=0.3)
+    if suggestions:
+        suggestion_text = "\n".join([f"- {s}" for s in suggestions])
+    else:
+        suggestion_text = "\n".join([f"- {faq['question']}" for faq in faqs[:3]])
     return (
         "🤖 I'm not sure how to answer that. Could you try rephrasing?\n"
-        "Here are some things you can ask:\n" + suggestions
+        "Here are some things you can ask:\n" + suggestion_text
     )
 
 # IP & location resolution
@@ -89,7 +95,7 @@ def get_bot_answer():
     email = data.get("email", "Unknown")
 
     if not question:
-        return jsonify({"answer": "❗Please ask a valid question."})
+        return jsonify({"answer": "❗Please enter a valid question to get help."})
 
     answer = get_answer(question)
     ip, location = get_user_ip_and_location(request)
@@ -111,7 +117,6 @@ def get_bot_answer():
 
 # Run locally
 if __name__ == "__main__":
-    from datetime import timedelta
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
